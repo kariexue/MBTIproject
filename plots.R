@@ -13,5 +13,6 @@ saveRDS(plot1, file="figure_rds/plot1.rds");
 plot2 <- ggplot(df2)+
   geom_histogram(aes(pminor,fill=type3))+
   facet_wrap(~type3,nrow=2)+
-  theme(legend.position = "none");
+  theme(legend.position = "none")+
+  xlab("Percent distribution of minor chords");
 saveRDS(plot2, file="figure_rds/plot2.rds");

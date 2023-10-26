@@ -16,7 +16,7 @@ docker build . -t mbtiproj
 And then start an RStudio by typing:
 
 ```
-docker run -v $(pwd):/home/rstudio/work -p 8787:8787 -e PASSWORD=<some-password>
+docker run -v $(pwd):/home/rstudio/work -e PASSWORD=<some-password> --rm -p 8787:8787 mbtiproj
 ```
 
 Once the Rstudio is running connect to it by visiting
@@ -25,6 +25,7 @@ https://localhost:8787 in your browser.
 To build the final report, visit the terminal in RStudio and type
 
 ```
+cd work
 make clean
-make report.pdf
+make mbtiproject.pdf
 ```
