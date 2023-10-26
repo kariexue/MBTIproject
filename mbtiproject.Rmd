@@ -1,0 +1,16 @@
+MBTI vs Spotify playlists
+
+```{r}
+library(ggplot2)
+source("plots.R")
+```
+
+The first plot shows a boxplot for the distribution of minor chords proportions for each MBTI personality type. 
+```{r}
+readRDS("figure_rds/plot1.rds")
+```
+
+We can see that the left two columns seem to have a lower average percent than the right two columns, which corresponds to the T/F distinction. We would like to delve deeper by making a second plot comparing the histograms of the minor chord proportion distribution for T(hinking) vs F(eeling) personality types.
+```{r}
+readRDS("figure_rds/plot2.rds")
+```
