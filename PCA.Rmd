@@ -1,0 +1,156 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+
+Load libraries and data
+```{r}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(matlab)
+library(deSolve)
+library(reshape2)
+library(aricode)
+df <- read.csv2("derived_data/new_mbti_df.csv",header=TRUE,sep=",")
+df$type3 <- ifelse(df$type3==TRUE,"T","F")
+na.rows <- which(rowSums(is.na(df)) > 0)
+df <- df[-na.rows,]
+df2 <- df[,c(9:19)]
+df2 <- as.data.frame(sapply(df2,as.numeric))
+
+```
+
+PCA
+
+```{r}
+results <- prcomp(df2 %>% as.matrix(),
+                  center=T, scale=T);
+ggplot(results$x %>% as_tibble(), aes(PC1,PC2)) + geom_point(aes(color=factor(df$type1)))
+
+```
+
+```{r}
+imagesc(results$x)
+summary(results)
+```
+
+```{r}
+ggplot(results$x %>% as_tibble(), aes(PC1)) + geom_density(aes(fill=factor(df$type1),alpha=0.5))
+ggplot(results$x %>% as_tibble(), aes(PC2)) + geom_density(aes(fill=factor(df$type1),alpha=0.5))
+ggplot(results$x %>% as_tibble(), aes(PC3)) + geom_density(aes(fill=factor(df$type1),alpha=0.5))
+ggplot(results$x %>% as_tibble(), aes(PC1)) + geom_density(aes(fill=factor(df$function_pair),alpha=0.3))
+```
+The density distribution of the data explained by PC1 differs much more than that of PC2 and PC3 in terms of Extroverted/Introverted personality traits, which makes sense since PC1 should explain the most variance.
+It looks like the playlist of people with Extroverted personality and those with Introverted personality tends to have slightly different preferences in music.
+
+
+Cluster analysis
+
+```{r}
+ggplot(results$x %>% as_tibble(), aes(PC1,PC2)) + 
+  geom_point(alpha=0.3,size=0.8)+
+    geom_rect(inherit.aes = FALSE, data=tibble(
+                  xmin = c(-2, 0.5),  # X-coordinate of the left side of the rectangle
+                  xmax = c(0, 3),  # X-coordinate of the right side of the rectangle
+                  ymin = c(-1,-1.5),  # Y-coordinate of the bottom side of the rectangle
+                  ymax = c(1,0.5)),   # Y-coordinate of the top side of the rectangle),
+              mapping=aes(xmin=xmin, ymin=ymin,
+                          xmax=xmax, ymax=ymax),
+              fill="yellow",
+              alpha=0.25)
+```
+
+```{r}
+df3 = as.data.frame(results$x) %>% select(PC1, PC2)
+df3$trial <- seq(nrow(df3));
+df2$trial <- seq(nrow(df2));
+s1 <- df3 %>% filter(PC1 >= -2 & PC1 <= 0 &
+                         PC2 >= -1 & PC2 <= 1) %>% mutate(label="Box 1");
+s2 <- df3 %>% filter(PC1 >= 0.5 & PC1 <= 3 &
+                         PC2 >= -1.5 & PC2 <= 0.5) %>% mutate(label="Box 2");
+
+s <- rbind(s1 %>% head(100),s2 %>% head(100));
+
+traces <- df2 %>% inner_join(s, by="trial");
+
+summary(traces)
+summary(df2)
+```
+
+```{r}
+df2$dtset <- "original"
+traces$dtset <- "clusters"
+trace2 <- traces %>% select(-PC1,-PC2,-label,-loudness_mean,-tempo_mean,-trial)
+df3 <- df2 %>% select(-loudness_mean,-tempo_mean,-trial)
+combined <- rbind(df3, trace2)
+meltdf <- melt(combined, id.var="dtset")
+ggplot(meltdf,aes(value)) + geom_density(aes(fill=dtset),alpha=0.5)+facet_wrap(~variable) 
+
+trace3 <- traces %>% select(loudness_mean,tempo_mean,dtset)
+df4 <- df2 %>% select(loudness_mean,tempo_mean,dtset)
+combined2 <- rbind(df4,trace3)
+meltdf2 <- melt(combined2,id.var="dtset")
+louddf <- meltdf2[meltdf2$variable=="loudness_mean",]
+tempodf <- meltdf2[meltdf2$variable=="tempo_mean",]
+ggplot(louddf,aes(value)) + geom_density(aes(fill=dtset),alpha=0.5)
+ggplot(tempodf,aes(value)) + geom_density(aes(fill=dtset),alpha=0.5)
+```
+We can see that the density distribution differs the most in energy, mode, tempo, and proportion of minor chords for the data in the clusters as compared to the original data sets, which means that these four variables may be key features for data analysis.
+
+
+```{r}
+trace4 <- traces %>% select(-trial,-PC1,-PC2,-loudness_mean,-tempo_mean,-dtset)
+meltdf3 <- melt(trace4, id.var="label")
+ggplot(meltdf3,aes(value)) + geom_density(aes(fill=label),alpha=0.5)+facet_wrap(~variable) 
+
+
+trace5 <- traces %>% select(loudness_mean,tempo_mean,label)
+meltdf4 <- melt(trace5,id.var="label")
+louddf2 <- meltdf4[meltdf4$variable=="loudness_mean",]
+tempodf2 <- meltdf4[meltdf4$variable=="tempo_mean",]
+ggplot(louddf2,aes(value)) + geom_density(aes(fill=label),alpha=0.5)
+ggplot(tempodf2,aes(value)) + geom_density(aes(fill=label),alpha=0.5)
+```
+
+We can see that the density distributions differ significantly for most features. These differences maybe explained by their relative position on the PC1 vs PC2 plot, showing that PC1 on the X-axis explains the variance well.
+
+t-SNE
+
+```{r}
+library(tidyverse);
+library(reticulate);
+
+use_python("/usr/bin/python3");
+manifold <- import("sklearn.manifold");
+
+tsne_instance <- manifold$TSNE(n_components=as.integer(2));
+results2 <- tsne_instance$fit_transform(df2 %>% select(-trial, -dtset) %>% as.matrix()) %>%
+    as_tibble();
+
+ggplot(results2, aes(V1,V2)) + geom_point(aes(color=factor(df$type1)))
+```
+
+K-means
+
+```{r}
+#df5 <- df2 %>% select(-trial,-dtset) %>% as.matrix()
+kmresult <- kmeans(as.matrix(results2),centers = 5)
+ggplot(results2, aes(V1, V2, color = as.factor(kmresult$cluster))) +
+  geom_point() +
+  labs(title = "K-Means Clustering Result")
+```
+
+```{r}
+pca <-results$x
+kmresultpca <- kmeans(as.matrix(pca),centers = 5)
+pca <- as.data.frame(pca)
+ggplot(pca, aes(PC1, PC2, color = as.factor(kmresultpca$cluster))) +
+  geom_point() +
+  labs(title = "K-Means Clustering Result")
+```
+
+```{r}
+NMI(kmresult$cluster,kmresultpca$cluster)
+```
