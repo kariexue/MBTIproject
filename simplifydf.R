@@ -1,4 +1,3 @@
-library(ggplot2);
 df <- read.csv("mbti_df.csv", header=TRUE,sep=',');
 df[,3:ncol(df)] <- lapply(df[,3:ncol(df)],as.numeric);
 df$type1 <- substring(df$mbti,1,1);
@@ -12,4 +11,4 @@ df$minorcount <- rowSums(minors);
 
 df2 <- cbind(df[,1:2],df[,47:52],df[, grepl("mean", names(df))]);
 df2$pminor = df2$minorcount / (df2$majorcount+df2$minorcount);
-write.csv(df2,file="derived_data/new_mbti_df.csv",row.names = FALSE);
+write.csv(df2,file="derived_data/new_mbti_df.csv",row.names = FALSE)
