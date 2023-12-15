@@ -8,6 +8,10 @@ Getting Started
 
 Clone the github repository to a local directory.
 
+```
+git clone https://github.com/kariexue/MBTIproject.git
+```
+
 Build the docker image by typing:
 ```
 docker build . -t mbtiproj
