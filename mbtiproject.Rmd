@@ -1,12 +1,71 @@
 MBTI vs Spotify playlists
 
-```{r}
-library(ggplot2)
+## 1. Introduction
+The aim of this project is to investigate associations between Myers–Briggs Type Indicator (MBTI) types and music taste according to personalized spotify playlists. 
+
+
+The MBTI type consists of the following four aspects:
+
+Extroversion (E) - Introversion (I)
+
+Intuition (N) – Sensing (S)
+
+Thinking (T) – Feeling (F)
+
+Judging (J) – Perceiving (P)
+
+
+A person's MBTI type is determined by the combinations of four letters, where each letter is dominant in each of the four pairs. For example, the author's MBTI is INTP, meaning that the author's personality is introverted, intuitive, thinking, and perceiving. 
+
+
+In this dataset from [Kaggle](https://www.kaggle.com/datasets/xtrnglc/spotify-mbti-playlists), 4072 Spotify playlists were collected and analyzed by the users' MBTI and the music features. 
+
+
+Some music features of interests are described as follows:
+
+Acousticness: confidence level of whether a track is acoustic (0 - 1)
+
+Danceability: how suitable a track is for dancing (0 - 1)
+
+Energy: perceptual measure of intensity and activity (0 - 1)
+
+Instrumentalness: confidence level of whether a track contains no vocal (0 - 1)
+
+Liveness: confidence level of a track being live and have audience presence (0 - 1)
+
+Loudness: overall loudness in decibels(dB) (-60 - 0)
+
+Mode: modality of a track (major=1, minor=0)
+
+Speechiness: proportion of spoken-words (0 - 1)
+
+Valence: Musical positiveness (0 - 1)
+
+
+We are interested to see if a particular MBTI or any of the four personality categories are more likely to appreciate specific music features. We will generate various figures to aid our investigations.
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
 source("plots.R")
+source("PCA.R")
+source("cluster.R")
 ```
 
-The first plot shows a boxplot for the distribution of minor chords proportions for each MBTI personality type. 
-```{r}
+## 2. Raw Data
+
+First, we counted the number of playlists collected in this dataset by each MBTI type. 
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,fig.width=7,fig.height=3}
+readRDS("figure_rds/plot0.rds")
+```
+
+
+It is interesting how the number of playlists by people with SJ function pair are much lower than the other function pairs. However, the author of the dataset did not specify how data were collected, but the counts of other MBTI types are all around 300, so we suspect that this difference is due to lack of data. Are SJ people are less likely to listen to music? Or are they perhaps reluctant to provide personal information for survey purposes?
+
+## 3. T/F vs Minor Modality
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,fig.width=7,fig.height=3}
 readRDS("figure_rds/plot1.rds")
 ```
 
